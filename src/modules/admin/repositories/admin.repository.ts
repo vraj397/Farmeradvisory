@@ -34,7 +34,7 @@ export class AdminRepository {
 
     // Query farmers if role is 'farmer' or undefined
     if (!role || role === 'farmer') {
-      const [farmerRows] = await this.database.getPool().execute<RowDataPacket[]>(
+      const farmerRows = await this.database.query<RowDataPacket[]>(
         `
           SELECT
             f.farmer_id     AS userId,
@@ -72,7 +72,7 @@ export class AdminRepository {
       }
       officerParams.push(limit, offset);
 
-      const [officerRows] = await this.database.getPool().execute<RowDataPacket[]>(
+      const officerRows = await this.database.query<RowDataPacket[]>(
         `
           SELECT
             o.officer_id    AS userId,
@@ -107,7 +107,7 @@ export class AdminRepository {
 
   async getPlatformStats(): Promise<IPlatformStats> {
     try {
-      const [rows] = await this.database.getPool().execute<RowDataPacket[]>(
+      const rows = await this.database.query<RowDataPacket[]>(
         `
           SELECT
             (SELECT COUNT(*) FROM farmers)                               AS totalFarmers,
@@ -140,7 +140,7 @@ export class AdminRepository {
   }
 
   async updateUserRole(userId: number, newRole: string): Promise<void> {
-    await this.database.getPool().execute(
+    await this.database.execute(
       `UPDATE officers SET role = ? WHERE officer_id = ?`,
       [newRole, userId],
     );
@@ -148,7 +148,7 @@ export class AdminRepository {
   }
 
   async deactivateUser(userId: number): Promise<void> {
-    await this.database.getPool().execute(
+    await this.database.execute(
       `UPDATE officers SET is_active = FALSE WHERE officer_id = ?`,
       [userId],
     );
@@ -157,7 +157,7 @@ export class AdminRepository {
 
   async getRecentAuditLogs(limit = 100): Promise<RowDataPacket[]> {
     try {
-      const [rows] = await this.database.getPool().execute<RowDataPacket[]>(
+      const rows = await this.database.query<RowDataPacket[]>(
         `
           SELECT
             id         AS auditId,

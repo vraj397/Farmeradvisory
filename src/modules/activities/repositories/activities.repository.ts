@@ -73,11 +73,12 @@ export class ActivitiesRepository {
   }
 
   async findRecentByFarmer(farmerId: number, days = 7): Promise<ICropActivity[]> {
+    const sinceDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const rows = await this.db.query<RowDataPacket[]>(
       `SELECT * FROM crop_activities
-       WHERE farmer_id = ? AND activity_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+       WHERE farmer_id = ? AND activity_date >= ?
        ORDER BY activity_date DESC`,
-      [farmerId, days],
+      [farmerId, sinceDate],
     );
     return (rows || []).map((r) => mapRowToActivity(r as Record<string, unknown>));
   }

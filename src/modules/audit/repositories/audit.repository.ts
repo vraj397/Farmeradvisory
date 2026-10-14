@@ -23,7 +23,7 @@ export class AuditRepository {
    */
   async log(entry: IAuditLogEntry): Promise<void> {
     try {
-      await this.database.getPool().execute<ResultSetHeader>(
+      await this.database.execute(
         `
           INSERT INTO audit_logs
             (user_id, action, entity, entity_id, meta, ip_address, created_at)

@@ -38,7 +38,7 @@ export class NotificationsRepository {
     message: string,
     relatedQueryId?: number,
   ): Promise<number> {
-    const [result] = await this.database.getPool().execute<ResultSetHeader>(
+    const result = await this.database.execute(
       `
         INSERT INTO notifications
           (farmer_id, channel, notification_type, title, message, related_query_id, status, sent_at)
@@ -54,7 +54,7 @@ export class NotificationsRepository {
     notificationId: number,
     status: NotificationStatus,
   ): Promise<void> {
-    await this.database.getPool().execute(
+    await this.database.execute(
       `
         UPDATE notifications
         SET
@@ -67,7 +67,7 @@ export class NotificationsRepository {
   }
 
   async markAsRead(notificationId: number, farmerId: number): Promise<boolean> {
-    const [result] = await this.database.getPool().execute<ResultSetHeader>(
+    const result = await this.database.execute(
       `
         UPDATE notifications
         SET status = 'read', read_at = CURRENT_TIMESTAMP
@@ -79,7 +79,7 @@ export class NotificationsRepository {
   }
 
   async findByFarmer(farmerId: number, limit = 50): Promise<INotificationRecord[]> {
-    const [rows] = await this.database.getPool().execute<RowDataPacket[]>(
+    const rows = await this.database.query<RowDataPacket[]>(
       `
         SELECT
           notification_id      AS notificationId,
