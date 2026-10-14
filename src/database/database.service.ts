@@ -51,8 +51,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     if (isPg) {
       this.engine = 'postgres';
-      const pgConnectionString =
-        dbUrl || `postgresql://${user}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
+      const pgConnectionString = dbUrl
+        ? this.sanitizePgUrl(dbUrl)
+        : `postgresql://${user}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
 
       this.pgPool = new PgPool({
         connectionString: pgConnectionString,
@@ -330,6 +331,25 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     s = s.replace(/\?/g, () => `$${paramIndex++}`);
 
     return s;
+  }
+
+  /**
+   * Automatically encodes raw special characters in the password segment of connection URLs
+   */
+  private sanitizePgUrl(urlStr: string): string {
+    try {
+      new URL(urlStr);
+      return urlStr;
+    } catch {
+      const match = urlStr.match(/^(postgres(?:ql)?:\/\/[^:]+:)(.*)(@[^@]+)$/);
+      if (match) {
+        const prefix = match[1];
+        const rawPass = match[2];
+        const suffix = match[3];
+        return `${prefix}${encodeURIComponent(rawPass)}${suffix}`;
+      }
+      return urlStr;
+    }
   }
 
   // ============================================================
