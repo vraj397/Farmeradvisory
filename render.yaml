@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: krishi-sahayak-backend
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PREFIX
+        value: api/v1
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        value: crop_advisory
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: WEATHER_PROVIDER
+        value: open_meteo
+      - key: WEATHER_BASE_URL
+        value: https://api.open-meteo.com/v1
+      - key: AI_PROVIDER
+        value: mock
+      - key: STORAGE_PROVIDER
+        value: local
+      - key: AUTH_METHOD
+        value: phone_otp
+      - key: OTP_MODE
+        value: mock
