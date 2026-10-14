@@ -1,4 +1,4 @@
-import { plainToInstance } from 'class-transformer';
+import { plainToInstance, Type } from 'class-transformer';
 import { IsEnum, IsNumber, IsOptional, IsString, validateSync } from 'class-validator';
 
 export enum Environment {
@@ -12,6 +12,7 @@ export class EnvironmentVariables {
   @IsOptional()
   NODE_ENV: Environment = Environment.Development;
 
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   PORT: number = 3000;
@@ -24,6 +25,7 @@ export class EnvironmentVariables {
   @IsOptional()
   DB_HOST?: string = 'localhost';
 
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   DB_PORT?: number = 3306;
@@ -52,6 +54,7 @@ export class EnvironmentVariables {
   @IsOptional()
   DB_SSL?: string = 'false';
 
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   DB_CONNECTION_LIMIT: number = 10;
@@ -76,6 +79,7 @@ export class EnvironmentVariables {
   @IsOptional()
   REDIS_HOST?: string = 'localhost';
 
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   REDIS_PORT?: number = 6379;
@@ -100,18 +104,22 @@ export class EnvironmentVariables {
   @IsOptional()
   OTP_MODE: string = 'mock';
 
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   OTP_LENGTH: number = 6;
 
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   OTP_EXPIRES_IN: number = 300;
 
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   OTP_MAX_ATTEMPTS: number = 5;
 
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   OTP_RESEND_COOLDOWN: number = 60;
@@ -134,9 +142,41 @@ export class EnvironmentVariables {
 }
 
 export function validate(config: Record<string, unknown>) {
-  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
+  const sanitized: Record<string, unknown> = { ...config };
+
+  const numericKeys = [
+    'PORT',
+    'DB_PORT',
+    'DB_CONNECTION_LIMIT',
+    'REDIS_PORT',
+    'OTP_LENGTH',
+    'OTP_EXPIRES_IN',
+    'OTP_MAX_ATTEMPTS',
+    'OTP_RESEND_COOLDOWN',
+  ];
+
+  for (const key of numericKeys) {
+    if (sanitized[key] === '' || sanitized[key] === null || sanitized[key] === undefined) {
+      delete sanitized[key]; // Allow default value from class instance
+    } else {
+      const parsed = Number(sanitized[key]);
+      if (!isNaN(parsed)) {
+        sanitized[key] = parsed;
+      }
+    }
+  }
+
+  // Remove empty strings so default values from EnvironmentVariables apply cleanly
+  for (const [k, v] of Object.entries(sanitized)) {
+    if (v === '') {
+      delete sanitized[k];
+    }
+  }
+
+  const validatedConfig = plainToInstance(EnvironmentVariables, sanitized, {
     enableImplicitConversion: true,
   });
+
   const errors = validateSync(validatedConfig, {
     skipMissingProperties: false,
   });
